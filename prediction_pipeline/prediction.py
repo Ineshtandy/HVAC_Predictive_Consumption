@@ -1,4 +1,8 @@
 from tabulate import tabulate  # Optional: if you want to print tabular data in logs
+from HVAC_RL_Module import SensorBasedThermalEnv  
+from ComparisonModule import ComparisonModule
+from stable_baselines3 import SAC
+import requests
 
 @app.post("/get_forecast_and_predict")
 async def get_forecast_and_predict(request: Request):
@@ -16,13 +20,18 @@ async def get_forecast_and_predict(request: Request):
     wind = forecast["wind"]["speed"]
     humidity = forecast["main"]["humidity"]
 
+    # create dataset from the api call
+    # df = ....
+
     # Setup your environment with weather data
-    env = create_hvac_env(temp, wind, humidity)  # assume you have a method to do this
+    env = SensorBasedThermalEnv(df)  # assume you have a method to do this
+    comparer = ComparisonModule(env)
+    model = SAC.load('HVAC_RL_Model.zip')  # Load your trained RL model
 
     # Run Baselines and RL
-    avg_energy_baseline, avg_comfort_baseline = traditional_hvac_baseline(env, episodes=1)
-    avg_energy_advanced, avg_comfort_advanced = advanced_hvac_baseline(env, episodes=1)
-    avg_energy_rl, avg_comfort_rl = evaluate_rl_agent(env, model, episodes=1)
+    avg_energy_baseline, avg_comfort_baseline = comparer.traditional_hvac_baseline(episodes=1)
+    avg_energy_advanced, avg_comfort_advanced = comparer.advanced_hvac_baseline(episodes=1)
+    avg_energy_rl, avg_comfort_rl = comparer.evaluate_rl_agent(model, episodes=1)
 
     # Energy savings %
     savings_vs_traditional = ((avg_energy_baseline - avg_energy_rl) / avg_energy_baseline) * 100
