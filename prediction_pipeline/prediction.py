@@ -3,25 +3,131 @@ from HVAC_RL_Module import SensorBasedThermalEnv
 from ComparisonModule import ComparisonModule
 from stable_baselines3 import SAC
 import requests
+import pandas as pd
+
+# lat = data["latitude"]
+lat = 33.44
+# lon = data["longitude"]
+lon = -94.04
+OPENWEATHER_API_KEY = "dc5d0c3993fc54fd5e9669c076a608cb"
+
+# Weather API call
+# url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&exclude=daily&appid={OPENWEATHER_API_KEY}"
+# response = requests.get(url)
+# weather_data = response.json()
+
+# current = weather_data["list"][0]
+# next = weather_data["list"][1]
+
+# current["main"]["temp"] = (current["main"]["temp"] - 273.15) * 1.8 + 32
+# current = {
+#     "main": {"temp": current["main"]["temp"], "humidity": current["main"]["humidity"]},
+#     "wind": {"speed": current["wind"]["speed"]}
+# }
+
+# next["main"]["temp"] = (next["main"]["temp"] - 273.15) * 1.8 + 32
+# next_list = [
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}}
+# ]
+
+# # Start by creating the first row from current
+# rows = [[
+#     current["main"]["temp"],
+#     current["main"]["humidity"],
+#     current["wind"]["speed"]
+# ]]
+
+# # Now add the next 8 rows
+# for entry in next_list:
+#     row = [
+#         entry["main"]["temp"],
+#         entry["main"]["humidity"],
+#         entry["wind"]["speed"]
+#     ]
+#     rows.append(row)
+
+# # Create the DataFrame
+# df = pd.DataFrame(rows, columns=["temp", "humidity", "wind_speed"])
+# print(df)
+
+# df = pd.DataFrame({
+#     'Value1': values1,
+#     'Value2': values2
+# })
+# print(df)
+
+
+# for datapoint in weather_data["list"][:2]:
+    # print("-------------------")
+    # print(datapoint)
+    # current = weather_data["list"][0]
+# print(current)
+# temp = (current["main"]["temp"] - 273.15) * 1.8 + 32
+# humidity = current["main"]["humidity"]
+# wind_speed = current["wind"]["speed"]
+# print(temp, humidity, wind_speed)
+# print(type(temp), type(humidity), type(wind_speed))
+
+
 
 @app.post("/get_forecast_and_predict")
 async def get_forecast_and_predict(request: Request):
     data = await request.json()
     lat = data["latitude"]
     lon = data["longitude"]
+    OPENWEATHER_API_KEY = "dc5d0c3993fc54fd5e9669c076a608cb"
 
     # Weather API call
-    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&exclude=daily&appid={OPENWEATHER_API_KEY}"
     response = requests.get(url)
     weather_data = response.json()
 
-    forecast = weather_data["list"][0]
-    temp = forecast["main"]["temp"]
-    wind = forecast["wind"]["speed"]
-    humidity = forecast["main"]["humidity"]
+    current = weather_data["list"][0]
+    next = weather_data["list"][1]
 
-    # create dataset from the api call
-    # df = ....
+    current["main"]["temp"] = (current["main"]["temp"] - 273.15) * 1.8 + 32
+    current = {
+        "main": {"temp": current["main"]["temp"], "humidity": current["main"]["humidity"]},
+        "wind": {"speed": current["wind"]["speed"]}
+    }
+
+    next["main"]["temp"] = (next["main"]["temp"] - 273.15) * 1.8 + 32
+    next_list = [
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
+        {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}}
+    ]
+
+    # Start by creating the first row from current
+    rows = [[
+        current["main"]["temp"],
+        current["main"]["humidity"],
+        current["wind"]["speed"]
+    ]]
+
+    # Now add the next 8 rows
+    for entry in next_list:
+        row = [
+            entry["main"]["temp"],
+            entry["main"]["humidity"],
+            entry["wind"]["speed"]
+        ]
+        rows.append(row)
+
+    # Create the DataFrame
+    df = pd.DataFrame(rows, columns=["temp", "humidity", "wind_speed"])
 
     # Setup your environment with weather data
     env = SensorBasedThermalEnv(df)  # assume you have a method to do this
@@ -44,9 +150,9 @@ async def get_forecast_and_predict(request: Request):
     ], headers=["Metric", "Traditional", "Advanced", "RL"], tablefmt="grid"))
 
     return {
-        "temp": temp,
-        "wind": wind,
-        "humidity": humidity,
+        "temp": current["main"]["temp"],
+        "wind": current["wind"]["speed"],
+        "humidity": current["main"]["humidity"],
         "results": {
             "traditional": {"energy": avg_energy_baseline, "comfort": avg_comfort_baseline},
             "advanced": {"energy": avg_energy_advanced, "comfort": avg_comfort_advanced},
