@@ -11,71 +11,17 @@ lat = 33.44
 lon = -94.04
 OPENWEATHER_API_KEY = "dc5d0c3993fc54fd5e9669c076a608cb"
 
-# Weather API call
-# url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&exclude=daily&appid={OPENWEATHER_API_KEY}"
-# response = requests.get(url)
-# weather_data = response.json()
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware 
+app = FastAPI()
 
-# current = weather_data["list"][0]
-# next = weather_data["list"][1]
-
-# current["main"]["temp"] = (current["main"]["temp"] - 273.15) * 1.8 + 32
-# current = {
-#     "main": {"temp": current["main"]["temp"], "humidity": current["main"]["humidity"]},
-#     "wind": {"speed": current["wind"]["speed"]}
-# }
-
-# next["main"]["temp"] = (next["main"]["temp"] - 273.15) * 1.8 + 32
-# next_list = [
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}},
-#     {"main": {"temp": next["main"]["temp"], "humidity": next["main"]["humidity"]}, "wind": {"speed": next["wind"]["speed"]}}
-# ]
-
-# # Start by creating the first row from current
-# rows = [[
-#     current["main"]["temp"],
-#     current["main"]["humidity"],
-#     current["wind"]["speed"]
-# ]]
-
-# # Now add the next 8 rows
-# for entry in next_list:
-#     row = [
-#         entry["main"]["temp"],
-#         entry["main"]["humidity"],
-#         entry["wind"]["speed"]
-#     ]
-#     rows.append(row)
-
-# # Create the DataFrame
-# df = pd.DataFrame(rows, columns=["temp", "humidity", "wind_speed"])
-# print(df)
-
-# df = pd.DataFrame({
-#     'Value1': values1,
-#     'Value2': values2
-# })
-# print(df)
-
-
-# for datapoint in weather_data["list"][:2]:
-    # print("-------------------")
-    # print(datapoint)
-    # current = weather_data["list"][0]
-# print(current)
-# temp = (current["main"]["temp"] - 273.15) * 1.8 + 32
-# humidity = current["main"]["humidity"]
-# wind_speed = current["wind"]["speed"]
-# print(temp, humidity, wind_speed)
-# print(type(temp), type(humidity), type(wind_speed))
-
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow any frontend (you can restrict later)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/get_forecast_and_predict")
 async def get_forecast_and_predict(request: Request):
@@ -131,7 +77,7 @@ async def get_forecast_and_predict(request: Request):
 
     # Setup your environment with weather data
     env = SensorBasedThermalEnv(df)  # assume you have a method to do this
-    comparer = ComparisonModule(env)
+    comparer = ComparisonModule(df, env)
     model = SAC.load('HVAC_RL_Model.zip')  # Load your trained RL model
 
     # Run Baselines and RL

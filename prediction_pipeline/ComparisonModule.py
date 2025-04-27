@@ -6,7 +6,7 @@ class ComparisonModule():
         self.env = env
 
     
-    def traditional_hvac_baseline(self, threshold=1.0, hvac_power_on=1.0, episodes=1):
+    def traditional_hvac_baseline(self, threshold=0.0, hvac_power_on=1.0, episodes=1):
         total_energy = 0
         total_comfort_penalty = 0
 
@@ -57,7 +57,7 @@ class ComparisonModule():
         # print(f"Avg Comfort Penalty: {avg_comfort:.2f}")
         return avg_energy, avg_comfort
     
-    def advanced_hvac_baseline(self, threshold=1.0, episodes=1):
+    def advanced_hvac_baseline(self, threshold=0.0, episodes=1):
         total_energy = 0
         total_comfort_penalty = 0
 
