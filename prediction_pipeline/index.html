@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather-based HVAC Energy Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: #333; }
+        button { padding: 10px 20px; font-size: 16px; }
+        #output, #savings { margin-top: 20px; font-size: 18px; }
+        canvas { margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+    <h1>HVAC Energy Savings Predictor</h1>
+    <button onclick="getLocation()">Get My Weather Prediction</button>
+
+    <p id="output"></p>
+    <canvas id="energyChart" width="400" height="200"></canvas>
+    <p id="savings"></p>
+
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendLocation, showError);
+            } else {
+                document.getElementById("output").innerText = "Geolocation not supported.";
+            }
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+        }
+
+        function sendLocation(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            fetch('http://127.0.0.1:8000/get_forecast_and_predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: lat, longitude: lon })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const results = data.results;
+                document.getElementById("output").innerHTML = `
+                    <strong>Weather Data:</strong><br>
+                    Temperature: ${data.temp} °C<br>
+                    Wind Speed: ${data.wind} m/s<br>
+                    Humidity: ${data.humidity} %
+                `;
+
+                // Render chart
+                const ctx = document.getElementById('energyChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Traditional HVAC', 'Advanced HVAC', 'RL Agent'],
+                        datasets: [{
+                            label: 'Avg Energy Used',
+                            data: [
+                                results.traditional.energy.toFixed(2),
+                                results.advanced.energy.toFixed(2),
+                                results.rl.energy.toFixed(2)
+                            ],
+                            backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(75, 192, 192, 0.6)']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+
+                document.getElementById("savings").innerHTML = `
+                    <strong>Energy Savings:</strong><br>
+                    Compared to Traditional HVAC: ${results.savings_vs_traditional.toFixed(2)}%<br>
+                    Compared to Advanced HVAC: ${results.savings_vs_advanced.toFixed(2)}%
+                `;
+            });
+        }
+    </script>
+
+</body>
+</html>
