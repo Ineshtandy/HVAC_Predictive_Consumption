@@ -9,7 +9,7 @@ import pandas as pd
 lat = 33.44
 # lon = data["longitude"]
 lon = -94.04
-OPENWEATHER_API_KEY = "dc5d0c3993fc54fd5e9669c076a608cb"
+OPENWEATHER_API_KEY = API_KEY
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware 
